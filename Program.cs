@@ -13,6 +13,8 @@ namespace MutableString
             Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             mutableString2.SetSubString(0, "ABC");
             Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
+            mutableString2.SetString("ABC");
+            Console.WriteLine($"mutableString == {mutableString2}");
         }
     }
 }
