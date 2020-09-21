@@ -7,6 +7,14 @@ namespace MutableString
         public MutableString(string s)
         {
             _string = s;
+            _capacity = _string.Length;
+            _modified = false;
+        }
+
+        public MutableString(int capacity)
+        {
+            _string = new string('\0', capacity);
+            _capacity = _string.Length;
             _modified = false;
         }
 
@@ -21,6 +29,8 @@ namespace MutableString
         private bool _modified;
 
 
+        public int Capacity => _capacity;
+        private int _capacity;
         public int Length => _string.Length;
 
         // implicitly cast to the system string type
@@ -32,16 +42,38 @@ namespace MutableString
         public void SetString(string src)
         {
             if (src.Length > Length)
-                throw new IndexOutOfRangeException();
-            _string.SetLength(src.Length);
+                throw new ArgumentOutOfRangeException();
+            SetLength(src.Length);
             SetSubString(0, src);
+        }
+
+        private void SetLength(int newLength)
+        {
+            if (newLength > _capacity)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            unsafe
+            {
+                // https://github.com/dotnet/runtime/blob/master/src/coreclr/src/vm/object.h
+                // StringLength is stored immediately before the char buffer
+                //    DWORD   m_StringLength;
+                //    WCHAR   m_FirstChar;
+                fixed (char* charBuffer = _string)
+                {
+                    int* pLength = (int*) charBuffer;
+                    pLength -= 1;
+                    *pLength = newLength;
+                }
+            }
         }
 
         public void SetSubString(int destPos, string src)
         {
-            if (src.Length > Length - destPos)
+            if (src.Length > Capacity - destPos)
             {
-                throw new IndexOutOfRangeException();
+                throw new ArgumentOutOfRangeException();
             }
 
             unsafe
@@ -50,9 +82,11 @@ namespace MutableString
                 fixed (char* pSrc = src)
                 {
                     // the chars are 2 bytes wide
-                    Buffer.MemoryCopy(pSrc, &pDest[destPos], _string.Length * 2, src.Length * 2);
+                    Buffer.MemoryCopy(pSrc, &pDest[destPos], Capacity * 2, src.Length * 2);
                 }
             }
+
+            SetLength(destPos + src.Length);
         }
 
         public override string ToString()

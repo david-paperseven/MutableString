@@ -20,7 +20,6 @@
       <e p="packages" t="ExcludeRecursive" />
       <e p="Program.cs" t="Include" />
       <e p="README.md" t="Include" />
-      <e p="StringMutationHelper.cs" t="Include" />
     </e>
   </component>
 </project>
