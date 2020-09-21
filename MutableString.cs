@@ -39,6 +39,33 @@ namespace MutableString
             return new MutableString(s);
         }
 
+        // SetSubString overwrites a part of the character buffer with a new sequence
+        // of characters. If optionally updates the length to truncate the string 
+        // at the end of the new sequence
+        public void SetSubString(int destPos, string src, bool updateLength = false)
+        {
+            if (src.Length > Capacity - destPos)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            unsafe
+            {
+                fixed (char* pDest = _string)
+                fixed (char* pSrc = src)
+                {
+                    // the chars are 2 bytes wide
+                    Buffer.MemoryCopy(pSrc, &pDest[destPos], Capacity * 2, src.Length * 2);
+                }
+            }
+
+            if (updateLength)
+                SetLength(destPos + src.Length);
+        }
+
+        // SetString overwrites the character buffer with new characters
+        // and set the buffer length which has the effect of replacing 
+        // the existing string with the new one
         public void SetString(string src)
         {
             if (src.Length > Length)
@@ -47,6 +74,8 @@ namespace MutableString
             SetSubString(0, src);
         }
 
+        // Sets the length of the character buffer
+        // in the underlying native object
         private void SetLength(int newLength)
         {
             if (newLength > _capacity)
@@ -69,26 +98,6 @@ namespace MutableString
             }
         }
 
-        public void SetSubString(int destPos, string src, bool updateLength = false)
-        {
-            if (src.Length > Capacity - destPos)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-
-            unsafe
-            {
-                fixed (char* pDest = _string)
-                fixed (char* pSrc = src)
-                {
-                    // the chars are 2 bytes wide
-                    Buffer.MemoryCopy(pSrc, &pDest[destPos], Capacity * 2, src.Length * 2);
-                }
-            }
-
-            if (updateLength)
-                SetLength(destPos + src.Length);
-        }
 
         public override string ToString()
         {
