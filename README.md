@@ -9,13 +9,13 @@ In performance constrained environments such as video games garbage collection i
 ## Usage
 
 ```csharp
-MutableString mutableString = new MutableString("AAAAAA");
-Console.WriteLine("mutableString is " + mutableString);
-Console.WriteLine($"mutableString == 'AAAAAA' is {mutableString == "AAAAAA"}");
-mutableString.SetSubString(1, "BCDE");
-mutableString[5] = 'F';
-Console.WriteLine("mutableString is " + mutableString);
-Console.WriteLine($"mutableString == 'ABCDEF' is {mutableString == "ABCDEF"}");
+            MutableString mutableString = new MutableString("AAAAAA");
+            Console.WriteLine("mutableString is " + mutableString);
+            Console.WriteLine($"mutableString == 'AAAAAA' is {mutableString == "AAAAAA"}");
+            mutableString.SetSubString(1, "BCDE");
+            mutableString[5] = 'F';
+            Console.WriteLine("mutableString is " + mutableString);
+            Console.WriteLine($"mutableString == 'ABCDEF' is {mutableString == "ABCDEF"}");
 ```
 ```
 Console Output:
