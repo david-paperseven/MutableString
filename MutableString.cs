@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
-
-[assembly: CompilationRelaxations(CompilationRelaxations.NoStringInterning)]
 
 namespace MutableString
 {
@@ -14,12 +11,19 @@ namespace MutableString
         }
 
         public string String => _string;
+
+        // the underlying string object
         private string _string { get; set; }
+
+        // we record whether the string has been mutated so as to know
+        // whether we can use C#'s existing string equality function or
+        // whether we need to check each character
         private bool _modified;
 
 
         public int Length => _string.Length;
 
+        // implicitly cast to the system string type
         public static implicit operator MutableString(string s)
         {
             return new MutableString(s);
@@ -59,6 +63,8 @@ namespace MutableString
             return !EqualsHelper(a, b);
         }
 
+        // this helper function is taken from the C# reference source
+        // https://referencesource.microsoft.com/#mscorlib/system/string.cs,11648d2d83718c5e,references
         private static unsafe bool EqualsHelper(MutableString strA, MutableString strB)
         {
             int length = strA.Length;
@@ -101,6 +107,7 @@ namespace MutableString
 
         public char this[int index]
         {
+            // use the getter from the underlying string object
             get => _string[index];
             set
             {
@@ -108,6 +115,7 @@ namespace MutableString
                     throw new IndexOutOfRangeException();
                 unsafe
                 {
+                    // pin the string's char buffer so we can access it 
                     fixed (char* valueChars = _string)
                     {
                         valueChars[index] = value;
