@@ -69,7 +69,7 @@ namespace MutableString
             }
         }
 
-        public void SetSubString(int destPos, string src)
+        public void SetSubString(int destPos, string src, bool updateLength = false)
         {
             if (src.Length > Capacity - destPos)
             {
@@ -86,7 +86,8 @@ namespace MutableString
                 }
             }
 
-            SetLength(destPos + src.Length);
+            if (updateLength)
+                SetLength(destPos + src.Length);
         }
 
         public override string ToString()
