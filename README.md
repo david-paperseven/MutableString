@@ -43,3 +43,8 @@ Console Output:
 > AAADEF
 > AAADEF
 ```
+
+
+## Requirements
+
+The MutableString class uses unsafe contexts so needs to be compiled with the -unsafe compile option.
