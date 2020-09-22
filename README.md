@@ -6,6 +6,10 @@ MutableString is a C# struct that wraps the String class and provides functions 
 
 In performance constrained environments such as video games garbage collection is expensive so it can be desirable to modify a string rather than creating a new one.
 
+## Why is it necessary?
+
+In C# strings are immutable so its not possible to change a string without creating a new string and that allocates memory that will eventually be garbage collected.
+
 ## Usage
 
 ```csharp
@@ -15,10 +19,10 @@ In performance constrained environments such as video games garbage collection i
             Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             // Displays ABCDEF==AAAAAA is False
 
+            Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             mutableString2.SetSubString(3, "DEF");
             // Displays ABCDEF==AAADEF is False
-
-            Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
+          
             mutableString2.SetSubString(0, "ABC", false);
             Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             // Displays ABCDEF==ABCDEF is True
