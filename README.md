@@ -21,8 +21,8 @@ The .NET framework requires the memory layout for string objects to be consisten
             Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             // Displays ABCDEF==AAAAAA is False
 
-            Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             mutableString2.SetSubString(3, "DEF");
+            Console.WriteLine($"{mutableString1}=={mutableString2} is {mutableString1 == mutableString2}");
             // Displays ABCDEF==AAADEF is False
           
             mutableString2.SetSubString(0, "ABC", false);
