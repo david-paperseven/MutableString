@@ -28,7 +28,7 @@ In performance constrained environments such as video games garbage collection i
 
             mutableString2.SetString("ABC");
             Console.WriteLine($"{mutableString2} length is {mutableString2.Length} capacity is {mutableString2.Capacity}");
-            // Displays ABC length is 3
+            // Displays ABC length is 3 capacity is 6
 
             MutableString mutableString3 = new MutableString(32);
             mutableString3.SetString("12345678");
