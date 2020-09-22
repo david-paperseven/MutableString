@@ -10,7 +10,7 @@ In performance constrained environments such as video games, garbage collection 
 
 ## How Does It Work?
 
-The .NET framework defines the memory layout for string objects so that it can provide optimised code paths for manipulating strings. MutableStrings uses this layout to make changes directly to the character buffer of a string.
+The .NET framework requires the memory layout for string objects to be consistent so that it can provide optimised code paths for manipulating strings. MutableStrings uses this layout to make changes directly to the character buffer of a string.
 
 ## Usage
 
