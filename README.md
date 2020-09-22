@@ -4,7 +4,7 @@ MutableString is a C# struct that wraps the String class and provides functions 
 
 ## Why would I want to do that?
 
-In C# strings are immutable so its not possible to change a string without creating a new string and that allocates memory that will eventually be garbage collected.
+In C# strings are immutable so its not possible to change a string without creating a new string and that allocates memory which will eventually be garbage collected.
 
 In performance constrained environments such as video games, garbage collection is expensive so it can be desirable to modify a string rather than creating a new one.
 
