@@ -8,11 +8,12 @@ namespace MutableString
         {
             Usage();
             Limitations();
+            Formatting();
         }
 
         static void Usage()
         {
-            Console.WriteLine("Usage");
+            Console.WriteLine("Usage Examples");
             MutableString mutableString1 = new MutableString("ABCDEF");
             MutableString mutableString2 = new MutableString("AAAAAA");
 
@@ -46,7 +47,7 @@ namespace MutableString
 
         static void Limitations()
         {
-            Console.WriteLine("Limitations");
+            Console.WriteLine("\nLimitation Example");
             MutableString mutableString1 = new MutableString("AAAAAA");
             MutableString mutableString2 = new MutableString("AAAAAA");
             mutableString2.SetSubString(3, "DEF");
@@ -54,6 +55,26 @@ namespace MutableString
             Console.WriteLine(mutableString2);
             // Displays    AAADEF
             //             AAADEF
+        }
+
+        static void Formatting()
+        {
+            Console.WriteLine("\nFormatting Examples");
+            MutableString mutableString = new MutableString(128);
+            short[] sValues = {Int16.MinValue, -27, 0, 1042, Int16.MaxValue};
+            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
+            foreach (short v in sValues)
+            {
+                mutableString.Format("{0,10:G}: {0,10:X}", v);
+                Console.WriteLine(mutableString);
+            }
+
+            float[] fValues = {1603, 1794.68235f, 15436.14f};
+            foreach (var value in fValues)
+            {
+                mutableString.Format("{0,12:C2}   {0,12:E3}   {0,12:F4}   {0,12:N3}  {1,12:P2}", Convert.ToDouble(value), Convert.ToDouble(value) / 10000);
+                Console.WriteLine(mutableString);
+            }
         }
     }
 }

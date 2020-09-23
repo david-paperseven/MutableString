@@ -6,10 +6,12 @@
     <e p="D:\Projects\Personal\GitHub\MutableString" t="IncludeRecursive">
       <e p=".gitignore" t="Include" />
       <e p="bin" t="ExcludeRecursive" />
+      <e p="ftoa.cs" t="Include" />
       <e p="LICENSE" t="Include" />
       <e p="MutableString.cs" t="Include" />
       <e p="MutableString.csproj" t="IncludeRecursive" />
       <e p="MutableString.sln" t="IncludeFlat" />
+      <e p="MutableStringExtensions.cs" t="Include" />
       <e p="obj" t="ExcludeRecursive">
         <e p="Debug" t="Include">
           <e p="netcoreapp3.1" t="Include">
@@ -20,6 +22,7 @@
       <e p="packages" t="ExcludeRecursive" />
       <e p="Program.cs" t="Include" />
       <e p="README.md" t="Include" />
+      <e p="StackBuffer.cs" t="Include" />
     </e>
   </component>
 </project>

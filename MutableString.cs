@@ -74,6 +74,19 @@ namespace MutableString
             SetSubString(0, src);
         }
 
+        // Set the string using the contents of a StackBuffer
+        public void SetStackBuffer(int destPos, StackBuffer buffer)
+        {
+            int newLength = destPos + buffer.Count;
+            if (destPos + buffer.Count > Capacity)
+                throw new ArgumentOutOfRangeException();
+            SetLength(newLength);
+            for (int i = destPos; i < newLength; i++)
+            {
+                this[i] = buffer[i];
+            }
+        }
+
         // Sets the length of the character buffer
         // in the underlying native object
         private void SetLength(int newLength)
@@ -169,7 +182,7 @@ namespace MutableString
             get => _string[index];
             set
             {
-                if (index < 0 || index >= Length)
+                if (index < 0 || index >= Capacity)
                     throw new IndexOutOfRangeException();
                 unsafe
                 {
