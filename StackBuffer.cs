@@ -71,7 +71,7 @@ namespace MutableString
             int start = 0, end = Count - 1;
             while (start < end)
             {
-                var temp = _buffer[start];
+                char temp = _buffer[start];
                 _buffer[start] = _buffer[end];
                 _buffer[end] = temp;
                 start++;

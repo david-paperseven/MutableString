@@ -70,7 +70,7 @@ namespace MutableString
             }
 
             float[] fValues = {1603, 1794.68235f, 15436.14f};
-            foreach (var value in fValues)
+            foreach (float value in fValues)
             {
                 mutableString.Format("{0,12:C2}   {0,12:E3}   {0,12:F4}   {0,12:N3}  {1,12:P2}", Convert.ToDouble(value), Convert.ToDouble(value) / 10000);
                 Console.WriteLine(mutableString);
