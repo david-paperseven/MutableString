@@ -189,7 +189,7 @@ namespace MutableString
                             }
                         }
 
-                        fmt.Append(ch); // number formatting places - not currently used 
+                        fmt.Append(ch);
                     }
                 }
 
@@ -198,7 +198,7 @@ namespace MutableString
                 pos++;
 
                 tempBuffer.Clear();
-                // switch based on the argument number in the brackets {}
+                // switch based on the argument number in the brackets {n}
                 switch (index)
                 {
                     case 0:
@@ -272,6 +272,7 @@ namespace MutableString
         /// </summary>
         private static void EvalInt(ref StackBuffer buffer, ulong intVal, int digits, ulong baseVal, bool negSign)
         {
+            // add the characters in reverse
             do
             {
                 // Lookup from static char array, to cover hex values too
@@ -280,10 +281,13 @@ namespace MutableString
                 digits--;
             } while (intVal != 0);
 
+            // add preceding zeros 
             while (digits-- > 0)
                 buffer.Append('0');
+            // add sign 
             if (negSign)
                 buffer.Append('-');
+            // reverse it into the correct order
             buffer.Reverse();
         }
 
@@ -319,7 +323,6 @@ namespace MutableString
                 case TypeCode.Int64:
                 {
                     Integer(ref buffer, format, arg.ToInt64(NumberFormatInfo.CurrentInfo), true);
-                    ;
                     break;
                 }
                 case TypeCode.UInt16:
