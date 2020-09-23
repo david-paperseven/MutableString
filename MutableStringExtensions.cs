@@ -44,14 +44,14 @@ namespace MutableString
             FormatHelper(text, format, 4, arg0, arg1, arg2, arg3, 0);
         }
 
-        public static void Format<A, B, C, D, E>(this MutableString text, string format, A arg0, B arg1, C arg2, D arg3)
+        public static void Format<A, B, C, D, E>(this MutableString text, string format, A arg0, B arg1, C arg2, D arg3, E arg4)
             where A : IConvertible
             where B : IConvertible
             where C : IConvertible
             where D : IConvertible
             where E : IConvertible
         {
-            FormatHelper(text, format, 4, arg0, arg1, arg2, arg3, arg3);
+            FormatHelper(text, format, 5, arg0, arg1, arg2, arg3, arg4);
         }
 
         private static void FormatError()
