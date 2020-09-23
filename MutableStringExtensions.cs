@@ -272,7 +272,7 @@ namespace MutableString
         /// </summary>
         private static void EvalInt(ref StackBuffer buffer, ulong intVal, int digits, ulong baseVal, bool negSign)
         {
-            // add the characters in reverse
+            // add the characters in reverse order
             do
             {
                 // Lookup from static char array, to cover hex values too
