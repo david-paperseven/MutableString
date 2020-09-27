@@ -133,6 +133,12 @@ namespace Performance
             return _string;
         }
 
+        public bool Contains(string s)
+        {
+            return _string.Contains(s);
+        }
+
+
         public static bool operator ==(MutableString a, MutableString b)
         {
             return EqualsHelper(a, b);
