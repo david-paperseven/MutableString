@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MutableString
+namespace Performance
 {
     public struct MutableString
     {
@@ -8,46 +8,46 @@ namespace MutableString
         {
             _string = s;
             _capacity = _string.Length;
-            _modified = false;
+            _lock = new object();
         }
 
         public MutableString(int capacity)
         {
             _string = new string('\0', capacity);
             _capacity = _string.Length;
-            _modified = false;
+            _lock = new object();
         }
+
+        private readonly object _lock;
 
         public string String => _string;
 
         // the underlying string object
-        private string _string { get; set; }
-
-        // we record whether the string has been mutated so as to know
-        // whether we can use C#'s existing string equality function or
-        // whether we need to check each character
-        private bool _modified;
-
+        private string _string { get; }
 
         public int Capacity => _capacity;
         private int _capacity;
         public int Length => _string.Length;
 
-        // implicitly cast to the system string type
+        // implicitly cast from the system string type
         public static implicit operator MutableString(string s)
         {
             return new MutableString(s);
         }
+
+        // implicitly cast to the system string type
+        public static implicit operator string(MutableString s)
+        {
+            return s.ToString();
+        }
+
 
         // SetSubString overwrites a part of the character buffer with a new sequence
         // of characters. If optionally updates the length to truncate the string 
         // at the end of the new sequence
         public void SetSubString(int destPos, string src, bool updateLength = false)
         {
-            if (src.Length > Capacity - destPos)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (src.Length > Capacity - destPos) throw new ArgumentOutOfRangeException();
 
             unsafe
             {
@@ -77,37 +77,53 @@ namespace MutableString
         // Set the string using the contents of a StackBuffer
         public void SetStackBuffer(int destPos, StackBuffer buffer)
         {
-            int newLength = destPos + buffer.Count;
+            var newLength = destPos + buffer.Count;
             if (destPos + buffer.Count > Capacity)
                 throw new ArgumentOutOfRangeException();
             SetLength(newLength);
-            for (int i = destPos; i < newLength; i++)
-            {
+            for (var i = destPos; i < newLength; i++)
                 this[i] = buffer[i];
-            }
         }
 
         // Sets the length of the character buffer
         // in the underlying native object
         private void SetLength(int newLength)
         {
-            if (newLength > _capacity)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (newLength > _capacity) throw new ArgumentOutOfRangeException();
 
             unsafe
             {
-                // https://github.com/dotnet/runtime/blob/master/src/coreclr/src/vm/object.h
-                // StringLength is stored immediately before the char buffer
-                //    DWORD   m_StringLength;
-                //    WCHAR   m_FirstChar;
-                fixed (char* charBuffer = _string)
+                // acquire a mutual exclusion lock
+                lock (_lock)
                 {
-                    int* pLength = (int*) charBuffer;
-                    pLength -= 1;
-                    *pLength = newLength;
-                }
+                    /*
+                      https://github.com/dotnet/runtime/blob/master/src/coreclr/src/vm/object.h
+                      StringLength is stored immediately before the char buffer
+                      
+                      quoted from object.h
+                      
+                    *   StringObject
+                    *
+                    *   Special String implementation for performance.
+                    *
+                    *   m_StringLength - Length of string in number of WCHARs
+                    *   m_FirstChar    - The string buffer
+                    *
+                       class StringObject : public Object
+                       {
+                           DWORD   m_StringLength;
+                           WCHAR   m_FirstChar;
+                           ....
+                       }
+                    */
+
+                    fixed (char* charBuffer = _string)
+                    {
+                        var pLength = (int*) charBuffer;
+                        pLength -= 1;
+                        *pLength = newLength;
+                    }
+                } // release the lock
             }
         }
 
@@ -119,16 +135,31 @@ namespace MutableString
 
         public static bool operator ==(MutableString a, MutableString b)
         {
-            if (!(a._modified || b._modified))
-                return string.Equals(a.String, b.String);
             return EqualsHelper(a, b);
         }
 
         public static bool operator !=(MutableString a, MutableString b)
         {
-            if (!(a._modified || b._modified))
-                return !string.Equals(a.String, b.String);
             return !EqualsHelper(a, b);
+        }
+
+        public override bool Equals(Object obj)
+        {
+            //Check for null and compare run-time types.
+            if ((obj == null) || this.GetType() != obj.GetType())
+            {
+                return false;
+            }
+            else
+            {
+                MutableString mutableString = (MutableString) obj;
+                return EqualsHelper(this, mutableString);
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return _string.GetHashCode();
         }
 
         // this helper function is taken from the C# reference source
@@ -137,13 +168,13 @@ namespace MutableString
         {
             unsafe
             {
-                int length = strA.Length;
+                var length = strA.Length;
 
                 fixed (char* ap = strA.String)
                 fixed (char* bp = strB.String)
                 {
-                    char* a = ap;
-                    char* b = bp;
+                    var a = ap;
+                    var b = bp;
 
                     // unroll the loop
                     while (length >= 10)
@@ -171,7 +202,7 @@ namespace MutableString
                         length -= 2;
                     }
 
-                    return (length <= 0);
+                    return length <= 0;
                 }
             }
         }
@@ -180,20 +211,24 @@ namespace MutableString
         {
             // use the getter from the underlying string object
             get => _string[index];
+
             set
             {
                 if (index < 0 || index >= Capacity)
                     throw new IndexOutOfRangeException();
+                // for the setter we need access to the native char buffer
                 unsafe
                 {
-                    // pin the string's char buffer so we can access it 
-                    fixed (char* valueChars = _string)
+                    // acquire a mutual exclusion lock
+                    lock (_lock)
                     {
-                        valueChars[index] = value;
-                    }
+                        // pin the string's char buffer so we can access it 
+                        fixed (char* valueChars = _string)
+                        {
+                            valueChars[index] = value;
+                        }
+                    } // release the lock
                 }
-
-                _modified = true;
             }
         }
     }

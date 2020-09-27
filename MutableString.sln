@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MutableString", "MutableString.csproj", "{C2B2018D-3E2E-4245-A84E-6B05B29E9F54}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{22790544-52DA-4CFE-83BA-9C737A04ADDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{C2B2018D-3E2E-4245-A84E-6B05B29E9F54}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2B2018D-3E2E-4245-A84E-6B05B29E9F54}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2B2018D-3E2E-4245-A84E-6B05B29E9F54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22790544-52DA-4CFE-83BA-9C737A04ADDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22790544-52DA-4CFE-83BA-9C737A04ADDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22790544-52DA-4CFE-83BA-9C737A04ADDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22790544-52DA-4CFE-83BA-9C737A04ADDE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

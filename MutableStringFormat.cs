@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Globalization;
 
-namespace MutableString
+namespace Performance
 {
-    public static class MutableStringExtensions
+    public static class MutableStringFormat
     {
         private const int MAX_CHARS = 255;
 
@@ -59,7 +59,7 @@ namespace MutableString
             throw new FormatException("Format_InvalidString");
         }
 
-        static void FormatHelper<A, B, C, D, E>(MutableString text, string format, int numArgs, A arg0, B arg1, C arg2, D arg3, E arg4)
+        private static void FormatHelper<A, B, C, D, E>(MutableString text, string format, int numArgs, A arg0, B arg1, C arg2, D arg3, E arg4)
             where A : IConvertible
             where B : IConvertible
             where C : IConvertible
@@ -67,18 +67,18 @@ namespace MutableString
             where E : IConvertible
         {
             IFormatProvider provider = CultureInfo.InvariantCulture;
-            int pos = 0;
-            int len = format.Length;
-            char ch = '\x0';
+            var pos = 0;
+            var len = format.Length;
+            var ch = '\x0';
 
             // Stackbuffer provide temporary buffer space allocated on the stack
-            StackBuffer charBuffer = new StackBuffer(stackalloc char[MAX_CHARS]);
-            StackBuffer tempBuffer = new StackBuffer(stackalloc char[MAX_CHARS]);
-            StackBuffer fmt = new StackBuffer(stackalloc char[MAX_CHARS]);
+            var charBuffer = new StackBuffer(stackalloc char[MAX_CHARS]);
+            var tempBuffer = new StackBuffer(stackalloc char[MAX_CHARS]);
+            var fmt = new StackBuffer(stackalloc char[MAX_CHARS]);
             while (true)
             {
-                int p = pos;
-                int i = pos;
+                var p = pos;
+                var i = pos;
                 while (pos < len)
                 {
                     ch = format[pos];
@@ -95,7 +95,9 @@ namespace MutableString
                     if (ch == '{')
                     {
                         if (pos < len && format[pos] == '{') // Treat as escape character for {{
+                        {
                             pos++;
+                        }
                         else
                         {
                             pos--;
@@ -111,7 +113,7 @@ namespace MutableString
                 pos++;
                 if (pos == len || (ch = format[pos]) < '0' || ch > '9')
                     FormatError();
-                int index = 0;
+                var index = 0;
                 do
                 {
                     index = index * 10 + ch - '0';
@@ -126,8 +128,8 @@ namespace MutableString
                     throw new FormatException("Format_IndexOutOfRange");
                 while (pos < len && (ch = format[pos]) == ' ')
                     pos++;
-                bool leftJustify = false;
-                int width = 0;
+                var leftJustify = false;
+                var width = 0;
                 if (ch == ',')
                 {
                     pos++;
@@ -181,7 +183,9 @@ namespace MutableString
                         else if (ch == '}')
                         {
                             if (pos < len && format[pos] == '}') // Treat as escape character for }}
+                            {
                                 pos++;
+                            }
                             else
                             {
                                 pos--;
@@ -229,19 +233,13 @@ namespace MutableString
                 }
 
                 // tempBuffer.Count is the length of the arg string
-                int pad = width - tempBuffer.Count;
-                if (!leftJustify && pad > 0)
-                {
-                    charBuffer.Append(' ', pad);
-                }
+                var pad = width - tempBuffer.Count;
+                if (!leftJustify && pad > 0) charBuffer.Append(' ', pad);
 
                 // append the arg string to the main character string
                 charBuffer.Append(tempBuffer);
 
-                if (leftJustify && pad > 0)
-                {
-                    charBuffer.Append(' ', pad);
-                }
+                if (leftJustify && pad > 0) charBuffer.Append(' ', pad);
             }
 
             text.SetStackBuffer(0, charBuffer);
@@ -251,20 +249,103 @@ namespace MutableString
         /// Integer
         /// Handles the 16,32,64bit signed and unsigned integers
         /// </summary>
-        static void Integer(ref StackBuffer buffer, StackBuffer format, long value, bool signed)
+        private static void Integer(ref StackBuffer buffer, StackBuffer format, TypeCode type, long value, bool signed)
         {
-            bool negSign = signed && (value < 0);
-            char fmt = ParseFormatSpecifier(format, out int digits);
-            char fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
-            if ((fmtUpper == 'G' && digits < 1) || fmtUpper == 'D')
+            var negSign = signed && value < 0;
+            var fmt = ParseFormatSpecifier(format, out var digits);
+            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
+            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
             {
                 EvalInt(ref buffer, (ulong) Math.Abs(value), digits, 10, negSign);
             }
             else if (fmtUpper == 'X')
             {
+                if (type == TypeCode.Int16)
+                    if (value < 0)
+                    {
+                        EvalInt(ref buffer, (uint) (value & 0x0000FFFF), digits, 16, false);
+                        return;
+                    }
+
+                if (type == TypeCode.Int32)
+                    if (value < 0)
+                    {
+                        EvalInt(ref buffer, (uint) (value & 0xFFFFFFFF), digits, 16, false);
+                        return;
+                    }
+
+
                 EvalInt(ref buffer, (ulong) Math.Abs(value), digits, 16, negSign);
             }
         }
+
+        private static void Long(ref StackBuffer buffer, StackBuffer format, TypeCode type, long value, bool signed)
+        {
+            var negSign = signed && value < 0;
+            var fmt = ParseFormatSpecifier(format, out var digits);
+            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
+            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
+            {
+                if (value < 0)
+                    EvalULong(ref buffer, (ulong) -value, digits, 10, negSign);
+                else
+                    EvalULong(ref buffer, (ulong) value, digits, 10, negSign);
+            }
+            else if (fmtUpper == 'X')
+            {
+                EvalULong(ref buffer, (ulong) value, digits, 16, false);
+            }
+        }
+
+        private static void ULong(ref StackBuffer buffer, StackBuffer format, TypeCode type, ulong value, bool signed)
+        {
+            var negSign = signed && value < 0;
+            var fmt = ParseFormatSpecifier(format, out var digits);
+            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
+            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
+                EvalULong(ref buffer, value, digits, 10, negSign);
+            else if (fmtUpper == 'X') EvalULong(ref buffer, value, digits, 16, negSign);
+        }
+
+        private static void EvalLong(ref StackBuffer buffer, long longVal, int digits, long baseVal, bool negSign)
+        {
+            // add the characters in reverse order
+            do
+            {
+                // Lookup from static char array, to cover hex values too
+                var i = (uint) (longVal % baseVal);
+                buffer.Append(asciiDigits[i]);
+                longVal /= baseVal;
+                digits--;
+            } while (longVal != 0);
+
+            Pad(ref buffer, digits, negSign);
+        }
+
+        private static void EvalULong(ref StackBuffer buffer, ulong longVal, int digits, long baseVal, bool negSign)
+        {
+            // add the characters in reverse order
+            do
+            {
+                // Lookup from static char array, to cover hex values too
+                buffer.Append(asciiDigits[longVal % (ulong) baseVal]);
+                longVal /= (ulong) baseVal;
+                digits--;
+            } while (longVal != 0);
+
+            Pad(ref buffer, digits, negSign);
+        }
+
+        // private static unsafe char* Int32ToHexChars(char* buffer, uint value, int hexBase, int digits)
+        // {
+        //     while (--digits >= 0 || value != 0)
+        //     {
+        //         byte digit = (byte)(value & 0xF);
+        //         *(--buffer) = (char)(digit + (digit < 10 ? (byte)'0' : hexBase));
+        //         value >>= 4;
+        //     }
+        //     return buffer;
+        // }
 
         /// <summary>
         /// EvalInt
@@ -291,13 +372,39 @@ namespace MutableString
             buffer.Reverse();
         }
 
+        private static void EvalInt32(ref StackBuffer buffer, int intVal, int digits, int baseVal, bool negSign)
+        {
+            // add the characters in reverse order
+            do
+            {
+                // Lookup from static char array, to cover hex values too
+                buffer.Append(asciiDigits[intVal % baseVal]);
+                intVal /= baseVal;
+                digits--;
+            } while (intVal != 0);
+
+            Pad(ref buffer, digits, negSign);
+        }
+
+        private static void Pad(ref StackBuffer buffer, int digits, bool negSign)
+        {
+            // add preceding zeros 
+            while (digits-- > 0)
+                buffer.Append('0');
+            // add sign 
+            if (negSign)
+                buffer.Append('-');
+            // reverse it into the correct order
+            buffer.Reverse();
+        }
+
         /// <summary>
         /// FloatingPoint
         /// Handles single and double precision floating point values
         /// </summary>
-        static void FloatingPoint(ref StackBuffer buffer, StackBuffer format, double value)
+        private static void FloatingPoint(ref StackBuffer buffer, StackBuffer format, double value)
         {
-            char fmt = ParseFormatSpecifier(format, out int digits);
+            var fmt = ParseFormatSpecifier(format, out var digits);
             ftoa.Convert(ref buffer, value, digits);
         }
 
@@ -305,39 +412,39 @@ namespace MutableString
         /// EvalArg
         /// Entry point for evaluating the generic arguments
         /// </summary>
-        static void EvalArg<T>(ref StackBuffer buffer, StackBuffer format, T arg)
+        private static void EvalArg<T>(ref StackBuffer buffer, StackBuffer format, T arg)
             where T : IConvertible
         {
             switch (arg?.GetTypeCode())
             {
                 case TypeCode.Int16:
                 {
-                    Integer(ref buffer, format, arg.ToInt16(NumberFormatInfo.CurrentInfo), true);
+                    Integer(ref buffer, format, arg.GetTypeCode(), arg.ToInt16(NumberFormatInfo.CurrentInfo), true);
                     break;
                 }
                 case TypeCode.Int32:
                 {
-                    Integer(ref buffer, format, arg.ToUInt32(NumberFormatInfo.CurrentInfo), true);
+                    Integer(ref buffer, format, arg.GetTypeCode(), arg.ToInt32(NumberFormatInfo.CurrentInfo), true);
                     break;
                 }
                 case TypeCode.Int64:
                 {
-                    Integer(ref buffer, format, arg.ToInt64(NumberFormatInfo.CurrentInfo), true);
+                    Long(ref buffer, format, arg.GetTypeCode(), arg.ToInt64(NumberFormatInfo.CurrentInfo), true);
                     break;
                 }
                 case TypeCode.UInt16:
                 {
-                    Integer(ref buffer, format, arg.ToInt16(NumberFormatInfo.CurrentInfo), false);
+                    Integer(ref buffer, format, arg.GetTypeCode(), arg.ToUInt16(NumberFormatInfo.CurrentInfo), false);
                     break;
                 }
                 case TypeCode.UInt32:
                 {
-                    Integer(ref buffer, format, arg.ToInt32(NumberFormatInfo.CurrentInfo), false);
+                    Integer(ref buffer, format, arg.GetTypeCode(), arg.ToUInt32(NumberFormatInfo.CurrentInfo), false);
                     break;
                 }
                 case TypeCode.UInt64:
                 {
-                    Integer(ref buffer, format, arg.ToInt64(NumberFormatInfo.CurrentInfo), false);
+                    ULong(ref buffer, format, arg.GetTypeCode(), arg.ToUInt64(NumberFormatInfo.CurrentInfo), false);
                     break;
                 }
                 case TypeCode.Single:
@@ -363,7 +470,7 @@ namespace MutableString
         /// https://github.com/dotnet/runtime/blob/master/src/libraries/System.Private.CoreLib/src/System/Number.Formatting.cs
         /// </summary>
         /// <returns></returns>
-        static char ParseFormatSpecifier(StackBuffer format, out int digits)
+        private static char ParseFormatSpecifier(StackBuffer format, out int digits)
         {
             char c = default;
             if (format.Length > 0)
@@ -384,7 +491,7 @@ namespace MutableString
                     if (format.Length == 2)
                     {
                         // Fast path for symbol and single digit, e.g. "X4"
-                        int d = format[1] - '0';
+                        var d = format[1] - '0';
                         if ((uint) d < 10)
                         {
                             digits = d;
@@ -405,12 +512,9 @@ namespace MutableString
                     // Fallback for symbol and any length digits.  The digits value must be >= 0 && <= 99,
                     // but it can begin with any number of 0s, and thus we may need to check more than two
                     // digits.  Further, for compat, we need to stop when we hit a null char.
-                    int n = 0;
-                    int i = 1;
-                    while (i < format.Length && (((uint) format[i] - '0') < 10) && n < 10)
-                    {
-                        n = (n * 10) + format[i++] - '0';
-                    }
+                    var n = 0;
+                    var i = 1;
+                    while (i < format.Length && (uint) format[i] - '0' < 10 && n < 10) n = n * 10 + format[i++] - '0';
 
                     // If we're at the end of the digits rather than having stopped because we hit something
                     // other than a digit or overflowed, return the standard format info.

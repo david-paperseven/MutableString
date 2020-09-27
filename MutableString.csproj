@@ -6,4 +6,16 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Compile Remove="Tests\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Tests\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Tests\**" />
+    </ItemGroup>
+
 </Project>

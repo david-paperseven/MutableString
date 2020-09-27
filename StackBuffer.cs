@@ -8,7 +8,7 @@
 
 using System;
 
-namespace MutableString
+namespace Performance
 {
     public ref struct StackBuffer
     {
@@ -42,10 +42,7 @@ namespace MutableString
 
         public void Append(string s)
         {
-            for (int i = 0; i < s.Length; i++)
-            {
-                _buffer[_index++] = s[i];
-            }
+            for (var i = 0; i < s.Length; i++) _buffer[_index++] = s[i];
         }
 
         public void Append(char c, int count)
@@ -56,10 +53,7 @@ namespace MutableString
 
         public void Append(StackBuffer sourceBuffer)
         {
-            for (int i = 0; i < sourceBuffer.Count; i++)
-            {
-                _buffer[_index++] = sourceBuffer[i];
-            }
+            for (var i = 0; i < sourceBuffer.Count; i++) _buffer[_index++] = sourceBuffer[i];
         }
 
 
@@ -71,7 +65,7 @@ namespace MutableString
             int start = 0, end = Count - 1;
             while (start < end)
             {
-                char temp = _buffer[start];
+                var temp = _buffer[start];
                 _buffer[start] = _buffer[end];
                 _buffer[end] = temp;
                 start++;

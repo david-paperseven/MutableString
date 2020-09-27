@@ -1,4 +1,6 @@
-﻿namespace MutableString
+﻿using System;
+
+namespace Performance
 {
     // Ported from 
     // https://github.com/antongus/stm32tpl/blob/master/ftoa.c
@@ -6,7 +8,7 @@
     {
         private const int MAX_PRECISION = 10;
 
-        static double[] rounders =
+        private static double[] rounders =
         {
             0.5, // 0
             0.05, // 1
@@ -23,7 +25,14 @@
 
         public static void Convert(ref StackBuffer buffer, double f, int precision)
         {
-            long intPart;
+            if (f > ulong.MaxValue)
+            {
+                buffer.Append("Out-of-range");
+                return;
+            }
+
+            ulong intPart;
+            ulong baseVal = 10; // baseVal has to be the same type as the integer part
 
             // check precision bounds
             if (precision > MAX_PRECISION)
@@ -51,27 +60,28 @@
             if (precision > 0)
                 f += rounders[precision];
 
+
             // integer part...
-            intPart = (long) f;
+            intPart = (ulong) Math.Truncate(f);
             f -= intPart;
 
             if (intPart == 0)
+            {
                 buffer.Append('0');
+            }
             else
             {
-                StackBuffer tempBuffer = new StackBuffer(stackalloc char[MAX_PRECISION]);
+                var tempBuffer = new StackBuffer(stackalloc char[MAX_PRECISION]);
                 // convert (reverse order)
                 while (intPart != 0)
                 {
-                    tempBuffer.Append((char) ('0' + intPart % 10));
-                    intPart /= 10;
+                    tempBuffer.Append((char) ('0' + intPart % baseVal));
+                    intPart /= baseVal;
                 }
 
                 tempBuffer.Reverse();
-                for (int i = 0; i < tempBuffer.Count; i++)
-                {
+                for (var i = 0; i < tempBuffer.Count; i++)
                     buffer.Append(tempBuffer[i]);
-                }
             }
 
             // decimal part
@@ -84,7 +94,7 @@
                 while (precision-- != 0)
                 {
                     f *= 10.0;
-                    char c = (char) f;
+                    var c = (char) f;
                     buffer.Append((char) ('0' + c));
                     f -= c;
                 }
