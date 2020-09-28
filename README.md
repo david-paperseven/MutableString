@@ -98,6 +98,10 @@ This means if you instantiate two MutableStrings with the same intial string the
             //             AAADEF
 
 ```
+This limitation does not apply when using the constructor that takes a capacity rather than an initial string. Consequently this form is normally preferred.
+``` csharp
+            MutableString    mutableString = new MutableString(128);
+```
 
 ## Requirements
 
