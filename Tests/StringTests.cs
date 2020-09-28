@@ -1,14 +1,13 @@
 using System;
-using System.Diagnostics;
-using JetBrains.dotMemoryUnit;
 using NUnit.Framework;
 using Performance;
+
+// todo move the test functions from the main program into the test assembly
 
 namespace Tests
 {
     public class Tests
     {
-
         [Test]
         public void FormatTest1()
         {

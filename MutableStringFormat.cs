@@ -8,7 +8,7 @@ namespace Performance
         private const int MAX_CHARS = 255;
 
         private static readonly char[] asciiDigits = new char[]
-            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+                                                     {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
         /// <summary>
         /// Format<>
@@ -67,14 +67,14 @@ namespace Performance
             where E : IConvertible
         {
             IFormatProvider provider = CultureInfo.InvariantCulture;
-            var pos = 0;
-            var len = format.Length;
-            var ch = '\x0';
+            var             pos      = 0;
+            var             len      = format.Length;
+            var             ch       = '\x0';
 
             // Stackbuffer provide temporary buffer space allocated on the stack
             var charBuffer = new StackBuffer(stackalloc char[MAX_CHARS]);
             var tempBuffer = new StackBuffer(stackalloc char[MAX_CHARS]);
-            var fmt = new StackBuffer(stackalloc char[MAX_CHARS]);
+            var fmt        = new StackBuffer(stackalloc char[MAX_CHARS]);
             while (true)
             {
                 var p = pos;
@@ -129,7 +129,7 @@ namespace Performance
                 while (pos < len && (ch = format[pos]) == ' ')
                     pos++;
                 var leftJustify = false;
-                var width = 0;
+                var width       = 0;
                 if (ch == ',')
                 {
                     pos++;
@@ -247,12 +247,13 @@ namespace Performance
 
         /// <summary>
         /// Integer
-        /// Handles the 16,32,64bit signed and unsigned integers
+        /// Handles the 16,32bit signed and unsigned integers
+        /// 64bit are handled separately
         /// </summary>
         private static void Integer(ref StackBuffer buffer, StackBuffer format, TypeCode type, long value, bool signed)
         {
-            var negSign = signed && value < 0;
-            var fmt = ParseFormatSpecifier(format, out var digits);
+            var negSign  = signed && value < 0;
+            var fmt      = ParseFormatSpecifier(format, out var digits);
             var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
             if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
             {
@@ -279,77 +280,9 @@ namespace Performance
             }
         }
 
-        private static void Long(ref StackBuffer buffer, StackBuffer format, TypeCode type, long value, bool signed)
-        {
-            var negSign = signed && value < 0;
-            var fmt = ParseFormatSpecifier(format, out var digits);
-            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
-            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
-            {
-                if (value < 0)
-                    EvalULong(ref buffer, (ulong) -value, digits, 10, negSign);
-                else
-                    EvalULong(ref buffer, (ulong) value, digits, 10, negSign);
-            }
-            else if (fmtUpper == 'X')
-            {
-                EvalULong(ref buffer, (ulong) value, digits, 16, false);
-            }
-        }
-
-        private static void ULong(ref StackBuffer buffer, StackBuffer format, TypeCode type, ulong value, bool signed)
-        {
-            var negSign = signed && value < 0;
-            var fmt = ParseFormatSpecifier(format, out var digits);
-            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
-            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
-                EvalULong(ref buffer, value, digits, 10, negSign);
-            else if (fmtUpper == 'X') EvalULong(ref buffer, value, digits, 16, negSign);
-        }
-
-        private static void EvalLong(ref StackBuffer buffer, long longVal, int digits, long baseVal, bool negSign)
-        {
-            // add the characters in reverse order
-            do
-            {
-                // Lookup from static char array, to cover hex values too
-                var i = (uint) (longVal % baseVal);
-                buffer.Append(asciiDigits[i]);
-                longVal /= baseVal;
-                digits--;
-            } while (longVal != 0);
-
-            Pad(ref buffer, digits, negSign);
-        }
-
-        private static void EvalULong(ref StackBuffer buffer, ulong longVal, int digits, long baseVal, bool negSign)
-        {
-            // add the characters in reverse order
-            do
-            {
-                // Lookup from static char array, to cover hex values too
-                buffer.Append(asciiDigits[longVal % (ulong) baseVal]);
-                longVal /= (ulong) baseVal;
-                digits--;
-            } while (longVal != 0);
-
-            Pad(ref buffer, digits, negSign);
-        }
-
-        // private static unsafe char* Int32ToHexChars(char* buffer, uint value, int hexBase, int digits)
-        // {
-        //     while (--digits >= 0 || value != 0)
-        //     {
-        //         byte digit = (byte)(value & 0xF);
-        //         *(--buffer) = (char)(digit + (digit < 10 ? (byte)'0' : hexBase));
-        //         value >>= 4;
-        //     }
-        //     return buffer;
-        // }
-
         /// <summary>
         /// EvalInt
-        /// Converts integers into ascii
+        /// Converts 16,32bit signed and unsigned ints to ascii
         /// </summary>
         private static void EvalInt(ref StackBuffer buffer, ulong intVal, int digits, ulong baseVal, bool negSign)
         {
@@ -372,16 +305,54 @@ namespace Performance
             buffer.Reverse();
         }
 
-        private static void EvalInt32(ref StackBuffer buffer, int intVal, int digits, int baseVal, bool negSign)
+        /// <summary>
+        /// Signed 64bit ints 
+        /// </summary>
+        private static void Long(ref StackBuffer buffer, StackBuffer format, TypeCode type, long value, bool signed)
+        {
+            var negSign  = signed && value < 0;
+            var fmt      = ParseFormatSpecifier(format, out var digits);
+            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
+            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
+            {
+                if (value < 0)
+                    EvalULong(ref buffer, (ulong) -value, digits, 10, negSign);
+                else
+                    EvalULong(ref buffer, (ulong) value, digits, 10, negSign);
+            }
+            else if (fmtUpper == 'X')
+            {
+                EvalULong(ref buffer, (ulong) value, digits, 16, false);
+            }
+        }
+
+        /// <summary>
+        /// Unsigned 64bit ints 
+        /// </summary>
+        private static void ULong(ref StackBuffer buffer, StackBuffer format, TypeCode type, ulong value, bool signed)
+        {
+            var negSign  = signed && value < 0;
+            var fmt      = ParseFormatSpecifier(format, out var digits);
+            var fmtUpper = (char) (fmt & 0xFFDF); // ensure fmt is upper-cased for purposes of comparison
+            if (fmtUpper == 'G' && digits < 1 || fmtUpper == 'D')
+                EvalULong(ref buffer, value, digits, 10, negSign);
+            else if (fmtUpper == 'X') EvalULong(ref buffer, value, digits, 16, negSign);
+        }
+
+        /// <summary>
+        /// EvalULong
+        /// Converts 64bit signed and unsigned ints to ascii
+        /// </summary>
+        private static void EvalULong(ref StackBuffer buffer, ulong longVal, int digits, long baseVal, bool negSign)
         {
             // add the characters in reverse order
             do
             {
                 // Lookup from static char array, to cover hex values too
-                buffer.Append(asciiDigits[intVal % baseVal]);
-                intVal /= baseVal;
+                buffer.Append(asciiDigits[longVal % (ulong) baseVal]);
+                longVal /= (ulong) baseVal;
                 digits--;
-            } while (intVal != 0);
+            } while (longVal != 0);
 
             Pad(ref buffer, digits, negSign);
         }
@@ -512,8 +483,8 @@ namespace Performance
                     // Fallback for symbol and any length digits.  The digits value must be >= 0 && <= 99,
                     // but it can begin with any number of 0s, and thus we may need to check more than two
                     // digits.  Further, for compat, we need to stop when we hit a null char.
-                    var n = 0;
-                    var i = 1;
+                    var n                                                                = 0;
+                    var i                                                                = 1;
                     while (i < format.Length && (uint) format[i] - '0' < 10 && n < 10) n = n * 10 + format[i++] - '0';
 
                     // If we're at the end of the digits rather than having stopped because we hit something

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Performance
 {
@@ -6,68 +7,60 @@ namespace Performance
     {
         private static void Main(string[] args)
         {
-            TestAllTypes();
-            //
-            // Usage();
-            // Limitations();
-            // Formatting();
+            TestIntegerTypes();
+            TestFloats();
+            TestDoubles();
+            //Usage();
+            //Limitations();
         }
 
-        private static void TestAllTypes()
+        private static void TestFloats()
         {
-            var mutableString = new MutableString(128);
+            var    mutableString = new MutableString(128);
+            string numberFormat  = "{0,20:F3}:{0,20:F6}";
+            TestFloatingPointTypes(mutableString, new List<float> {0.0001f, 0.25f, 1000.40002f, 1.0f / 10.0f, (float) Math.PI, float.Epsilon}, numberFormat);
+            TestFloatingPointTypes(mutableString, new List<float> {(float) Math.PI, float.Epsilon}, numberFormat);
+        }
 
-            short[] sValues = {short.MinValue, -27, 0, 1042, short.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in sValues)
+        private static void TestDoubles()
+        {
+            var    mutableString = new MutableString(128);
+            string numberFormat  = "{0,20:F10}:{0,20:F10}";
+            TestFloatingPointTypes(mutableString, new List<double> {0.0001, 0.25, 1000.40002, 1.0 / 10.0, Math.PI, float.Epsilon}, numberFormat);
+            TestFloatingPointTypes(mutableString, new List<double> {Math.PI, float.Epsilon}, numberFormat);
+        }
+
+        private static void TestFloatingPointTypes<T>(MutableString mutableString, IList<T> values, string numberFormat) where T : IConvertible
+        {
+            Console.WriteLine("\n----------------------------------------" + typeof(T) + "----------------------------------------");
+            foreach (var v in values)
             {
-                var systemString = string.Format("{0,20:G}: {0,20:X}", v);
-                mutableString.Format("{0,20:G}: {0,20:X}", v);
+                var systemString = string.Format(numberFormat, v);
+                mutableString.Format(numberFormat, v);
                 Console.WriteLine($"'{mutableString}' == '{systemString}'  is {mutableString == systemString}");
             }
+        }
 
-            int[] iValues = {int.MinValue, -27, 0, 1042, int.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in iValues)
-            {
-                mutableString.Format("{0,20:G}: {0,20:X}", v);
-                var systemString = string.Format("{0,20:G}: {0,20:X}", v);
-                Console.WriteLine($"'{mutableString}' == '{systemString}'  is {mutableString == systemString}");
-            }
+        private static void TestIntegerTypes()
+        {
+            var    mutableString = new MutableString(128);
+            string numberFormat  = "{0,20:G}: {0,20:X}";
 
-            long[] lValues = {long.MinValue, -27, 0, 1042, long.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in lValues)
-            {
-                var systemString = string.Format("{0,20:G}: {0,20:X}", v);
-                mutableString.Format("{0,20:G}: {0,20:X}", v);
-                Console.WriteLine($"'{mutableString}' == '{systemString}'  is {mutableString == systemString}");
-            }
+            TestIntegers(mutableString, new List<short> {short.MinValue, -27, 0, 1042, short.MaxValue}, numberFormat);
+            TestIntegers(mutableString, new List<int> {int.MinValue, -27, 0, 1042, int.MaxValue}, numberFormat);
+            TestIntegers(mutableString, new List<long> {long.MinValue, -27, 0, 1042, long.MaxValue}, numberFormat);
+            TestIntegers(mutableString, new List<ushort> {ushort.MinValue, 27, 0, 1042, ushort.MaxValue}, numberFormat);
+            TestIntegers(mutableString, new List<uint> {ushort.MinValue, 27, 0, 1042, uint.MaxValue}, numberFormat);
+            TestIntegers(mutableString, new List<ulong> {ulong.MinValue, 27, 0, 1042, ulong.MaxValue}, numberFormat);
+        }
 
-            ushort[] uValues = {ushort.MinValue, 27, 0, 1042, ushort.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in uValues)
+        static void TestIntegers<T>(MutableString mutableString, IList<T> values, string numberFormat) where T : IConvertible
+        {
+            Console.WriteLine("\n----------------------------------------" + typeof(T) + "----------------------------------------");
+            foreach (var v in values)
             {
-                var systemString = string.Format("{0,20:G}: {0,20:X}", v);
-                mutableString.Format("{0,20:G}: {0,20:X}", v);
-                Console.WriteLine($"'{mutableString}' == '{systemString}'  is {mutableString == systemString}");
-            }
-
-            uint[] uiValues = {uint.MinValue, 27, 0, 1042, uint.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in uiValues)
-            {
-                mutableString.Format("{0,20:G}: {0,20:X}", v);
-                var systemString = string.Format("{0,20:G}: {0,20:X}", v);
-                Console.WriteLine($"'{mutableString}' == '{systemString}'  is {mutableString == systemString}");
-            }
-
-            ulong[] ulValues = {ulong.MinValue, 27, 0, 1042, ulong.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in ulValues)
-            {
-                mutableString.Format("{0,20:G}: {0,20:X}", v);
-                var systemString = string.Format("{0,20:G}: {0,20:X}", v);
+                var systemString = string.Format(numberFormat, v);
+                mutableString.Format(numberFormat, v);
                 Console.WriteLine($"'{mutableString}' == '{systemString}'  is {mutableString == systemString}");
             }
         }
@@ -118,24 +111,5 @@ namespace Performance
             //             AAADEF
         }
 
-        private static void Formatting()
-        {
-            Console.WriteLine("\nFormatting Examples");
-            var mutableString = new MutableString(128);
-            short[] sValues = {short.MinValue, -27, 0, 1042, short.MaxValue};
-            Console.WriteLine("{0,10}  {1,10}", "Decimal", "Hex");
-            foreach (var v in sValues)
-            {
-                mutableString.Format("{0,10:G}: {0,10:X}", v);
-                Console.WriteLine(mutableString);
-            }
-
-            float[] fValues = {1603, 1794.68235f, 15436.14f};
-            foreach (var value in fValues)
-            {
-                mutableString.Format("{0,12:C2}   {0,12:E3}   {0,12:F4}   {0,12:N3}  {1,12:P2}", Convert.ToDouble(value), Convert.ToDouble(value) / 10000);
-                Console.WriteLine(mutableString);
-            }
-        }
     }
 }

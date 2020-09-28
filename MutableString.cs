@@ -4,18 +4,26 @@ namespace Performance
 {
     public struct MutableString
     {
+        private static int _globalCount = 0;
+
         public MutableString(string s)
         {
-            _string = s;
+            _string   = s;
             _capacity = _string.Length;
-            _lock = new object();
+            _lock     = new object();
         }
 
         public MutableString(int capacity)
         {
-            _string = new string('\0', capacity);
+            char[] buffer = new char[capacity];
+            // set a monotonically increasing value in the newly created buffer to ensure it doesn't get interned
+            buffer[0] = (char) (_globalCount & 0xffff);
+            buffer[1] = (char) ((_globalCount >> 16) & 0xffff);
+            _globalCount++;
+
+            _string   = new string(buffer);
             _capacity = _string.Length;
-            _lock = new object();
+            _lock     = new object();
         }
 
         private readonly object _lock;
@@ -25,9 +33,9 @@ namespace Performance
         // the underlying string object
         private string _string { get; }
 
-        public int Capacity => _capacity;
+        public  int Capacity => _capacity;
         private int _capacity;
-        public int Length => _string.Length;
+        public  int Length => _string.Length;
 
         // implicitly cast from the system string type
         public static implicit operator MutableString(string s)
@@ -40,7 +48,6 @@ namespace Performance
         {
             return s.ToString();
         }
-
 
         // SetSubString overwrites a part of the character buffer with a new sequence
         // of characters. If optionally updates the length to truncate the string 
@@ -59,8 +66,7 @@ namespace Performance
                 }
             }
 
-            if (updateLength)
-                SetLength(destPos + src.Length);
+            if (updateLength) SetLength(destPos + src.Length);
         }
 
         // SetString overwrites the character buffer with new characters
@@ -68,8 +74,7 @@ namespace Performance
         // the existing string with the new one
         public void SetString(string src)
         {
-            if (src.Length > Length)
-                throw new ArgumentOutOfRangeException();
+            if (src.Length > Length) throw new ArgumentOutOfRangeException();
             SetLength(src.Length);
             SetSubString(0, src);
         }
@@ -78,11 +83,9 @@ namespace Performance
         public void SetStackBuffer(int destPos, StackBuffer buffer)
         {
             var newLength = destPos + buffer.Count;
-            if (destPos + buffer.Count > Capacity)
-                throw new ArgumentOutOfRangeException();
+            if (destPos + buffer.Count > Capacity) throw new ArgumentOutOfRangeException();
             SetLength(newLength);
-            for (var i = destPos; i < newLength; i++)
-                this[i] = buffer[i];
+            for (var i = destPos; i < newLength; i++) this[i] = buffer[i];
         }
 
         // Sets the length of the character buffer
@@ -120,13 +123,12 @@ namespace Performance
                     fixed (char* charBuffer = _string)
                     {
                         var pLength = (int*) charBuffer;
-                        pLength -= 1;
-                        *pLength = newLength;
+                        pLength  -= 1;
+                        *pLength =  newLength;
                     }
                 } // release the lock
             }
         }
-
 
         public override string ToString()
         {
@@ -137,7 +139,6 @@ namespace Performance
         {
             return _string.Contains(s);
         }
-
 
         public static bool operator ==(MutableString a, MutableString b)
         {
@@ -190,8 +191,8 @@ namespace Performance
                         if (*(int*) (a + 4) != *(int*) (b + 4)) return false;
                         if (*(int*) (a + 6) != *(int*) (b + 6)) return false;
                         if (*(int*) (a + 8) != *(int*) (b + 8)) return false;
-                        a += 10;
-                        b += 10;
+                        a      += 10;
+                        b      += 10;
                         length -= 10;
                     }
 
@@ -201,10 +202,9 @@ namespace Performance
                     // the zero terminator.
                     while (length > 0)
                     {
-                        if (*(int*) a != *(int*) b)
-                            break;
-                        a += 2;
-                        b += 2;
+                        if (*(int*) a != *(int*) b) break;
+                        a      += 2;
+                        b      += 2;
                         length -= 2;
                     }
 
@@ -220,8 +220,7 @@ namespace Performance
 
             set
             {
-                if (index < 0 || index >= Capacity)
-                    throw new IndexOutOfRangeException();
+                if (index < 0 || index >= Capacity) throw new IndexOutOfRangeException();
                 // for the setter we need access to the native char buffer
                 unsafe
                 {
